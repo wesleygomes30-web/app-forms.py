@@ -1,6 +1,6 @@
 import sqlite3
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 
 
 # --- Configuração do Banco de Dados ---
@@ -54,10 +54,52 @@ def salvar_cliente():
         # Mensagem de sucesso e limpeza automática dos campos
         messagebox.showinfo("Sucesso", "Cliente cadastrado com sucesso!")
         limpar_formulario()
-
     except Exception as erro:
         messagebox.showerror(
             "Erro no Banco de Dados", f"Não foi possível salvar os dados: {erro}"
+        )
+
+
+# --- Nova Funcionalidade: Visualizar Clientes ---
+def visualizar_clientes():
+    try:
+        conexao = sqlite3.connect("clientes.db")
+        cursor = conexao.cursor()
+        cursor.execute("SELECT id, nome, email, telefone FROM clientes")
+        registros = cursor.fetchall()
+        conexao.close()
+
+        # Cria a nova janela secundária
+        janela_lista = tk.Toplevel(janela)
+        janela_lista.title("Clientes Cadastrados")
+        janela_lista.geometry("520x320")
+
+        # Cria uma tabela (Treeview) para exibir os dados
+        colunas = ("ID", "Nome", "E-mail", "Telefone")
+        tabela = ttk.Treeview(janela_lista, columns=colunas, show="headings")
+
+        tabela.heading("ID", text="ID")
+        tabela.column("ID", width=40, anchor="center")
+
+        tabela.heading("Nome", text="Nome")
+        tabela.column("Nome", width=160)
+
+        tabela.heading("E-mail", text="E-mail")
+        tabela.column("E-mail", width=180)
+
+        tabela.heading("Telefone", text="Telefone")
+        tabela.column("Telefone", width=110)
+
+        tabela.pack(fill="both", expand=True, padx=15, pady=15)
+
+        # Insere cada cliente encontrado na tabela
+        for cliente in registros:
+            tabela.insert("", tk.END, values=cliente)
+
+    except Exception as erro:
+        messagebox.showerror(
+            "Erro no Banco de Dados",
+            f"Não foi possível carregar os clientes: {erro}",
         )
 
 
@@ -66,7 +108,7 @@ inicializar_banco()
 
 janela = tk.Tk()
 janela.title("Cadastro de Clientes")
-janela.geometry("360x260")
+janela.geometry("360x290")
 janela.resizable(False, False)
 
 # Frame principal para organizar os elementos com espaçamento
@@ -88,9 +130,9 @@ tk.Label(frame, text="Telefone:").grid(row=2, column=0, sticky="w", pady=5)
 entry_telefone = tk.Entry(frame, width=32)
 entry_telefone.grid(row=2, column=1, pady=5)
 
-# Frame para os botões
+# Frame para os botões superiores
 frame_botoes = tk.Frame(frame)
-frame_botoes.grid(row=3, column=0, columnspan=2, pady=20)
+frame_botoes.grid(row=3, column=0, columnspan=2, pady=(20, 8))
 
 # Botão Salvar
 btn_salvar = tk.Button(
@@ -113,6 +155,17 @@ btn_limpar = tk.Button(
     width=14,
 )
 btn_limpar.pack(side="left", padx=8)
+
+# Novo Botão: Visualizar Clientes (posicionado logo abaixo)
+btn_visualizar = tk.Button(
+    frame,
+    text="Visualizar Clientes",
+    command=visualizar_clientes,
+    bg="#2196F3",
+    fg="white",
+    width=31,
+)
+btn_visualizar.grid(row=4, column=0, columnspan=2, pady=5)
 
 # Inicia o loop da janela
 janela.mainloop()
